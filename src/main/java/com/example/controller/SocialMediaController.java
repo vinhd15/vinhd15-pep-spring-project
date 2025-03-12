@@ -25,10 +25,16 @@ import com.example.service.MessageService;
  */
 @RestController
 public class SocialMediaController {
+    
+    private AccountService accountService;
+    private MessageService messageService;
 
-    AccountService accountService;
-    MessageService messageService;
+    public SocialMediaController(AccountService accountService, MessageService messageService){
+        this.accountService = accountService;
+        this.messageService = messageService;
+    }
 
+    
     @PostMapping("/register")
     public Account register(@RequestBody Account account){
         return new Account();
