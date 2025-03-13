@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.logging.Messages;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -36,22 +38,40 @@ public class SocialMediaController {
 
     
     @PostMapping("/register")
-    public Account register(@RequestBody Account account){
-        return new Account();
+    public ResponseEntity<?> register(@RequestBody Account account){
+        if (account.getUsername().isBlank() || account.getPassword().length() < 4) {
+            return ResponseEntity.badRequest().body("Invalid account details"); // 400 Bad Request
+        }
+        if(accountService.hasUsername(account.getUsername())){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username Already exists");
+        }
+        Account savedAccount = accountService.saveAccount(account);
+        return ResponseEntity.ok(savedAccount);
     }
 
     @PostMapping("/login")
-    public Account login(@RequestBody Account account){
-        return new Account();
+    public ResponseEntity<?> login(@RequestBody Account account){
+        Account verified = accountService.verifyAccount(account);
+        if (verified != null) {
+            return ResponseEntity.ok(verified);
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
     }
 
     @PostMapping("/messages")
-    public Message postMessage(@RequestBody Message message){
-        return new Message();
+    public ResponseEntity<?> postMessage(@RequestBody Message message){
+        if(message.getMessageText().isBlank() ||
+            message.getMessageText().length() > 255 ||
+            accountService.findAccountById(message.getPostedBy()) == null){
+                return ResponseEntity.status(400).body(null);
+            }
+        Message saved = messageService.addMessage(message);
+        return ResponseEntity.ok(saved);
     }
 
     @GetMapping("/messages")
     public List<Message> getMessages(){
+        
         return new ArrayList<Message>();
     }
 
