@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.entity.Account;
@@ -70,29 +71,42 @@ public class SocialMediaController {
     }
 
     @GetMapping("/messages")
+    @ResponseStatus(HttpStatus.OK)
     public List<Message> getMessages(){
-        
-        return new ArrayList<Message>();
+        return messageService.findAllMessages();
     }
 
     @GetMapping("/messages/{messageId}")
     public Message getMessage(@PathVariable int messageId){
-        return new Message();
+        return messageService.findMessageById(messageId);
     }
 
     @DeleteMapping("/messages/{messageId}")
-    public int deleteMessage(@PathVariable int messageId){
-        return 0;
+    public ResponseEntity<?> deleteMessage(@PathVariable int messageId){
+       int rows = messageService.deleteMessage(messageId);
+       return rows > 0 ? ResponseEntity.ok(rows) : ResponseEntity.ok().build();
     }
 
     @PatchMapping("/messages/{messageId}")
-    public Message updateMessage(@PathVariable int messageId){
-        return new Message();
+    public ResponseEntity<?> updateMessage(@PathVariable int messageId, @RequestBody Message message){
+        String messageText = message.getMessageText();
+        if (messageText != null) {
+            if(messageText.isEmpty() || messageText.isBlank() || messageText.length() > 255 ){
+                return ResponseEntity.status(400).body(null);
+            }
+        
+        
+            int rows = messageService.updateMessage(messageId, messageText);
+            if(rows > 0){
+                return ResponseEntity.ok(rows);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @GetMapping("/accounts/{accountId}/messages")
     public List<Message> getMessageByAccount(@PathVariable int accountId){
-        return new ArrayList<Message>();
+        return messageService.findMessagesByAccount(accountId);
     }
 
     
